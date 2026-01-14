@@ -1,0 +1,15 @@
+venv/
+envs/
+.env
+.env.prod.*
+.env.dev.*
+.env.test.*
+.env.prod.*
+.env.dev.*
+.env.test.*
+aws_access_key_id/
+aws_secret_access_key/
+pems/
+pacs/
+*.pyc
+setup.md
