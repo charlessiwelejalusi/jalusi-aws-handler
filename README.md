@@ -1,6 +1,6 @@
 # EC2 Instance Manager
 
-A Python script using boto3 to manage AWS EC2 instances. This tool provides a simple command-line interface to start, stop, restart, and monitor EC2 instances.
+A Python project using boto3 to manage AWS EC2 instances and projects deployed to those instances. This tool provides a simple command-line interface to start, stop, restart, and monitor EC2 instances and services.
 
 ## Features
 
