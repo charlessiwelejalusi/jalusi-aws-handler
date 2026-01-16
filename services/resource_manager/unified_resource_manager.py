@@ -1276,7 +1276,47 @@ class InfrastructureManager(AWSResourceManager):
         print(f"🔗 Attaching EBS volume {volume_id} to instance {instance_id}")
         
         try:
-            # Attach volume
+            # Check current volume state and attachments
+            response = self.ec2_client.describe_volumes(VolumeIds=[volume_id])
+            if not response['Volumes']:
+                raise Exception(f"Volume {volume_id} not found")
+            
+            volume = response['Volumes'][0]
+            attachments = volume.get('Attachments', [])
+            
+            # Check if volume is already attached
+            if attachments:
+                current_attachment = attachments[0]
+                current_instance_id = current_attachment['InstanceId']
+                current_state = current_attachment['State']
+                
+                # If already attached to the target instance, skip
+                if current_instance_id == instance_id:
+                    if current_state == 'attached':
+                        print(f"✅ Volume {volume_id} is already attached to instance {instance_id}")
+                        return
+                    elif current_state in ['attaching', 'detaching']:
+                        print(f"⏳ Volume {volume_id} is currently {current_state}, waiting...")
+                        waiter = self.ec2_client.get_waiter('volume_in_use')
+                        waiter.wait(VolumeIds=[volume_id])
+                        print(f"✅ Volume {volume_id} attachment completed")
+                        return
+                
+                # If attached to a different instance, detach it first
+                if current_instance_id != instance_id:
+                    print(f"⚠️  Volume {volume_id} is attached to different instance: {current_instance_id}")
+                    print(f"🔄 Detaching from instance {current_instance_id}...")
+                    
+                    self.ec2_client.detach_volume(VolumeId=volume_id)
+                    
+                    # Wait for detachment to complete
+                    print("⏳ Waiting for volume to detach...")
+                    waiter = self.ec2_client.get_waiter('volume_available')
+                    waiter.wait(VolumeIds=[volume_id])
+                    print(f"✅ Volume {volume_id} detached successfully")
+            
+            # Attach volume to target instance
+            print(f"🔗 Attaching volume {volume_id} to instance {instance_id}...")
             response = self.ec2_client.attach_volume(
                 VolumeId=volume_id,
                 InstanceId=instance_id,
@@ -1295,6 +1335,26 @@ class InfrastructureManager(AWSResourceManager):
             print(f"✅ EBS volume attached successfully!")
             
         except Exception as e:
+            error_msg = str(e)
+            # Handle the specific VolumeInUse error more gracefully
+            if 'VolumeInUse' in error_msg:
+                print(f"⚠️  Volume {volume_id} is already in use")
+                # Try to get current attachment info
+                try:
+                    response = self.ec2_client.describe_volumes(VolumeIds=[volume_id])
+                    if response['Volumes']:
+                        volume = response['Volumes'][0]
+                        attachments = volume.get('Attachments', [])
+                        if attachments:
+                            attached_to = attachments[0]['InstanceId']
+                            if attached_to == instance_id:
+                                print(f"✅ Volume is already attached to the target instance")
+                                return
+                            else:
+                                print(f"💡 Volume is attached to instance: {attached_to}")
+                                print(f"💡 You may need to detach it first or use a different volume")
+                except:
+                    pass
             print(f"❌ Error attaching EBS volume: {e}")
             raise
 

@@ -44,7 +44,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "stop-instance",
-                "--instance_name", "jalusi-db-1",
+                "--instance_name", "jalusi-dev-1",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -95,7 +95,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "create-infrastructure",
-                "--instance_name", "jalusi-db-1",
+                "--instance_name", "jalusi-dev-1",
                 "--instance-type", "t3.small",
                 "--region", "af-south-1"
             ],
@@ -109,7 +109,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "destroy-infrastructure",
-                "--instance_name", "jalusi-db-1",
+                "--instance_name", "jalusi-dev-1",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -122,7 +122,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "list-resources",
-                "--instance_name", "jalusi-db-1",
+                "--instance_name", "jalusi-dev-1",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -135,7 +135,20 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "build-env",
-                "--instance_name", "jalusi-db-1",
+                "--instance_name", "jalusi-dev-1",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Docker Manager: Restart Docker",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/docker_compose_manager/unified_docker_manager.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--action", "restart-docker",
+                "--instance_name", "jalusi-dev-1",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -162,9 +175,27 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "up",
+                "--instance_name", "jalusi-dev-1",
+                "--project_name", "esdt_v1",
+                "--docker_compose_file_path", "/home/ec2-user/projects/esdt_v1/",
+                // "--project_name", "agritech",
+                // "--docker_compose_file_path", "/home/ec2-user/projects/agritech/services",
+                "--build",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Docker Manager: Up (Custom Path)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/docker_compose_manager/unified_docker_manager.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--action", "up",
                 "--instance_name", "jalusi-db-1",
                 "--project_name", "test-project",
-                "--build",
+                "--docker_compose_file_path", "/home/ec2-user/custom/path",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -184,6 +215,21 @@
             "justMyCode": false
         },
         {
+            "name": "Docker Manager: Down (Custom Path)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/docker_compose_manager/unified_docker_manager.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--action", "down",
+                "--instance_name", "jalusi-db-1",
+                "--project_name", "test-project",
+                "--docker_compose_file_path", "/home/ec2-user/custom/path",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
             "name": "Docker Manager: Restart Services",
             "type": "debugpy",
             "request": "launch",
@@ -198,6 +244,21 @@
             "justMyCode": false
         },
         {
+            "name": "Docker Manager: Restart (Custom Path)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/docker_compose_manager/unified_docker_manager.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--action", "restart",
+                "--instance_name", "jalusi-db-1",
+                "--project_name", "test-project",
+                "--docker_compose_file_path", "/home/ec2-user/custom/path",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
             "name": "Docker Manager: Logs (Stream)",
             "type": "debugpy",
             "request": "launch",
@@ -205,9 +266,12 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "logs",
-                "--instance_name", "jalusi-db-1",
-                "--project_name", "test-project",
+                "--instance_name", "jalusi-dev-1",
+                "--project_name", "esdt_v1",
+                // "--project_name", "agritech",
                 "--follow",
+                "--docker_compose_file_path", "/home/ec2-user/projects/esdt_v1/",
+                // "--docker_compose_file_path", "/home/ec2-user/projects/agritech/services",
                 "--tail", "100",
                 "--region", "af-south-1"
             ],
@@ -221,8 +285,25 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "logs",
-                "--instance_name", "jalusi-db-1",
-                "--project_name", "test-project",
+                "--instance_name", "jalusi-dev-1",
+                "--project_name", "agritech",
+                "--docker_compose_file_path", "/home/ec2-user/projects/agritech/services",
+                "--tail", "100",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Docker Manager: Logs (Custom Path)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/docker_compose_manager/unified_docker_manager.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--action", "logs",
+                "--instance_name", "jalusi-dev-1",
+                "--project_name", "agritech",
+                "--docker_compose_file_path", "/home/ec2-user/projects/agritech/services",
                 "--tail", "100",
                 "--region", "af-south-1"
             ],
@@ -238,6 +319,21 @@
                 "--action", "status",
                 "--instance_name", "jalusi-db-1",
                 "--project_name", "test-project",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Docker Manager: Status (Custom Path)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/docker_compose_manager/unified_docker_manager.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--action", "status",
+                "--instance_name", "jalusi-db-1",
+                "--project_name", "test-project",
+                "--docker_compose_file_path", "/home/ec2-user/custom/path",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -337,7 +433,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "disk-usage",
-                "--instance_name", "jalusi-db-1",
+                "--instance_name", "jalusi-dev-1",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -374,8 +470,8 @@
             "program": "${workspaceFolder}/services/manage_project_version_control/create_project_repository.py",
             "console": "integratedTerminal",
             "args": [
-                "--instance_name", "jalusi-db-1",
-                "--project_name", "jalusicorp",
+                "--instance_name", "jalusi-dev-1",
+                "--project_name", "agritech",
                 "--github_username", "Jalusi-Tech",
                 "--region", "af-south-1"
             ],
@@ -388,8 +484,8 @@
             "program": "${workspaceFolder}/services/manage_project_version_control/create_project_repository.py",
             "console": "integratedTerminal",
             "args": [
-                "--instance_name", "jalusi-db-1",
-                "--project_name", "jalusicorp",
+                "--instance_name", "jalusi-dev-1",
+                "--project_name", "esdt_v1",
                 "--github_username", "Jalusi-Tech",
                 "--pac-name", "jalusi-pac",
                 "--region", "af-south-1"
@@ -406,6 +502,257 @@
                 "--instance_name", "jalusi-db-1",
                 "--project_name", "jalusicorp",
                 "--github_username", "Jalusi-Tech",
+                "--pac-filename", "jalusi-pac.txt",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Deploy Project Env: Basic Deployment",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/deploy_project_env.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance-name", "jalusi-dev-1",
+                "--project", "esdt_v1",
+                // "--project", "jalusicorp",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Deploy Project Env: Custom Remote Directory",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/deploy_project_env.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance-name", "jalusi-dev-1",
+                "--project", "jalusicorp",
+                "--remote-dir", "/home/ec2-user/projects/agritech/services",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Deploy Project Env: With Custom SSH Key",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/deploy_project_env.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance-name", "jalusi-db-1",
+                "--project", "jalusicorp",
+                "--ssh-key", "${workspaceFolder}/pems/jalusi-db-1.pem",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Deploy Project Env: Different Region",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/deploy_project_env.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance-name", "jalusi-db-1",
+                "--project", "jalusicorp",
+                "--region", "us-east-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Deploy Project Env: Test Project",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/deploy_project_env.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance-name", "jalusi-db-1",
+                "--project", "test-project",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Replace Nginx Config: Basic",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance_name", "jalusi-dev-1",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Replace Nginx Config: HTTP",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance_name", "jalusi-dev-1",
+                "--config_file", "nginx_http.conf",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Replace Nginx Config: HTTPS",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance_name", "jalusi-dev-1",
+                "--config_file", "nginx_https.conf",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Replace Nginx Config: Let's Encrypt",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance_name", "jalusi-dev-1",
+                "--config_file", "nginx_http.lets_encrypt.conf",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Replace Nginx Config: Different Instance",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance_name", "jalusi-db-1",
+                "--config_file", "nginx_http.conf",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Restart Nginx: Basic",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance_name", "jalusi-dev-1",
+                "--action", "restart",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Restart Nginx: Different Instance",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance_name", "jalusi-db-1",
+                "--action", "restart",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Update Project Directory: List Instances",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/update_project_directory.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--list",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Update Project Directory: List Instances (Filtered)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/update_project_directory.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--list",
+                "--filter", "jalusi",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Update Project Directory: Update All Projects",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/update_project_directory.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance-name", "jalusi-dev-1",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Update Project Directory: Update Specific Project",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/update_project_directory.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance-name", "jalusi-dev-1",
+                "--project", "agritech",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Update Project Directory: Update Project with Branch",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/update_project_directory.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance-name", "jalusi-dev-1",
+                "--project", "agritech",
+                "--branch", "develop",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Update Project Directory: Update with PAC name",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/update_project_directory.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance-name", "jalusi-dev-1",
+                "--project", "agritech",
+                "--pac-name", "jalusi-pac",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Update Project Directory: Update with PAC filename",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/manage_project_version_control/update_project_directory.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--instance-name", "jalusi-db-1",
+                "--project", "jalusicorp",
+                "--branch", "main",
                 "--pac-filename", "jalusi-pac.txt",
                 "--region", "af-south-1"
             ],

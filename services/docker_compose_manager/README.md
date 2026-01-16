@@ -20,6 +20,8 @@ This script provides comprehensive Docker and Docker Compose management function
 
 ### ✅ **Docker Environment Management**
 - **Automatic Installation**: Install Docker and Docker Compose on EC2 instances
+- **Buildx Support**: Install/upgrade Docker Buildx (required for compose build)
+- **Docker Restart**: Restart Docker daemon remotely
 - **Configuration**: Configure Docker daemon for optimal performance
 - **Verification**: Verify installations and system compatibility
 - **SSH Integration**: Secure SSH connections to EC2 instances
@@ -130,71 +132,106 @@ SSH keys are automatically detected from:
 #### **Build Docker Environment**
 ```bash
 # Install Docker and Docker Compose on EC2 instance
-python unified_docker_manager.py --action build-env --sequence 1
+python unified_docker_manager.py --action build-env --instance_name jalusi-db-1
 
 # Different region
-python unified_docker_manager.py --action build-env --sequence 1 --region us-east-1
+python unified_docker_manager.py --action build-env --instance_name jalusi-db-1 --region us-east-1
+```
+
+#### **Install/Upgrade Docker Buildx**
+```bash
+# Install or upgrade Docker Buildx (fixes "compose build requires buildx 0.17 or later" error)
+python unified_docker_manager.py --action install-buildx --instance_name jalusi-db-1
+
+# Different region
+python unified_docker_manager.py --action install-buildx --instance_name jalusi-db-1 --region us-east-1
+```
+
+#### **Restart Docker Daemon**
+```bash
+# Restart Docker daemon on EC2 instance
+python unified_docker_manager.py --action restart-docker --instance_name jalusi-db-1
+
+# Different region
+python unified_docker_manager.py --action restart-docker --instance_name jalusi-db-1 --region us-east-1
 ```
 
 #### **What Happens During Environment Setup**
 
-1. **🔍 Instance Discovery**: Finds running EC2 instance by sequence number
+1. **🔍 Instance Discovery**: Finds running EC2 instance by name
 2. **🔑 SSH Connection**: Establishes secure SSH connection
 3. **📦 System Update**: Updates system packages
 4. **🐳 Docker Installation**: Installs Docker and Docker Compose
-5. **⚙️ Configuration**: Configures Docker daemon for performance
-6. **✅ Verification**: Verifies installations and system compatibility
+5. **🔧 Buildx Installation**: Installs Docker Buildx (required for compose build)
+6. **⚙️ Configuration**: Configures Docker daemon for performance
+7. **✅ Verification**: Verifies installations and system compatibility
 
 ### **Docker Compose Operations**
 
 #### **Start Services**
 ```bash
 # Start all services
-python unified_docker_manager.py --action up --sequence 1
+python unified_docker_manager.py --action up --instance_name jalusi-db-1 --project_name learnly-project
 
 # Start with build
-python unified_docker_manager.py --action up --sequence 1 --build
+python unified_docker_manager.py --action up --instance_name jalusi-db-1 --project_name learnly-project --build
 
 # Start specific service
-python unified_docker_manager.py --action up --sequence 1 --service api
+python unified_docker_manager.py --action up --instance_name jalusi-db-1 --project_name learnly-project --service api
+
+# Start with custom docker-compose path
+python unified_docker_manager.py --action up --instance_name jalusi-db-1 --project_name learnly-project --docker_compose_file_path /home/ec2-user/custom/path
 ```
 
 #### **Stop Services**
 ```bash
 # Stop all services
-python unified_docker_manager.py --action down --sequence 1
+python unified_docker_manager.py --action down --instance_name jalusi-db-1 --project_name learnly-project
 
 # Stop specific service
-python unified_docker_manager.py --action down --sequence 1 --service db
+python unified_docker_manager.py --action down --instance_name jalusi-db-1 --project_name learnly-project --service db
+
+# Stop with custom docker-compose path
+python unified_docker_manager.py --action down --instance_name jalusi-db-1 --project_name learnly-project --docker_compose_file_path /home/ec2-user/custom/path
 ```
 
 #### **Restart Services**
 ```bash
 # Restart all services
-python unified_docker_manager.py --action restart --sequence 1
+python unified_docker_manager.py --action restart --instance_name jalusi-db-1 --project_name learnly-project
 
 # Restart specific service
-python unified_docker_manager.py --action restart --sequence 1 --service api
+python unified_docker_manager.py --action restart --instance_name jalusi-db-1 --project_name learnly-project --service api
+
+# Restart with custom docker-compose path
+python unified_docker_manager.py --action restart --instance_name jalusi-db-1 --project_name learnly-project --docker_compose_file_path /home/ec2-user/custom/path
 ```
 
 #### **View Logs**
 ```bash
 # View all service logs
-python unified_docker_manager.py --action logs --sequence 0
+python unified_docker_manager.py --action logs --instance_name jalusi-db-1 --project_name learnly-project
 
 # View specific service logs
-python unified_docker_manager.py --action logs --sequence 0 --service api
+python unified_docker_manager.py --action logs --instance_name jalusi-db-1 --project_name learnly-project --service api
 
 # View logs with custom tail
-python unified_docker_manager.py --action logs --sequence 0 --tail 50
+python unified_docker_manager.py --action logs --instance_name jalusi-db-1 --project_name learnly-project --tail 50
 
-python unified_docker_manager.py --action logs -f --sequence 0  --service learnly-api --tail 50
+# View logs with follow flag
+python unified_docker_manager.py --action logs --follow --instance_name jalusi-db-1 --project_name learnly-project --service api --tail 50
+
+# View logs with custom docker-compose path
+python unified_docker_manager.py --action logs --instance_name jalusi-db-1 --project_name learnly-project --docker_compose_file_path /home/ec2-user/custom/path
 ```
 
 #### **Check Status**
 ```bash
 # Check service status
-python unified_docker_manager.py --action status --sequence 0
+python unified_docker_manager.py --action status --instance_name jalusi-db-1 --project_name learnly-project
+
+# Check status with custom docker-compose path
+python unified_docker_manager.py --action status --instance_name jalusi-db-1 --project_name learnly-project --docker_compose_file_path /home/ec2-user/custom/path
 ```
 
 ### **Docker Cleanup and Maintenance**
@@ -290,14 +327,16 @@ Filesystem      Size  Used Avail Use% Mounted on
 ### **Docker Installation**
 - **Docker Version**: Latest stable version
 - **Docker Compose**: Latest release from GitHub
+- **Docker Buildx**: Latest version (0.17+) for compose build support
 - **Configuration**: Optimized for performance and logging
 - **User Permissions**: ec2-user added to docker group
 
 ### **Docker Compose Configuration**
-- **Working Directory**: `~/projects/`
+- **Working Directory**: `~/projects/{project_name}/` (default) or custom path via `--docker_compose_file_path`
 - **Compose File**: `docker-compose.yml`
 - **Service Management**: Individual or all services
 - **Log Management**: Configurable tail and follow options
+- **Custom Path Support**: Use `--docker_compose_file_path` to specify a custom directory for docker-compose operations
 
 ### **Cleanup Operations**
 - **Standard Cleanup**: Removes unused containers, images, volumes, networks
@@ -367,9 +406,23 @@ cleanup_commands.extend([
 ```
 **Solutions:**
 - Verify Docker Compose is installed
-- Check docker-compose.yml file exists in ~/projects/
+- Check docker-compose.yml file exists in the project directory
 - Ensure Docker daemon is running
 - Check service configuration
+
+#### **3a. Buildx Version Error**
+```
+compose build requires buildx 0.17 or later
+```
+**Solutions:**
+- Install or upgrade Docker Buildx:
+  ```bash
+  python unified_docker_manager.py --action install-buildx --instance_name jalusi-db-1
+  ```
+- Or rebuild the entire Docker environment:
+  ```bash
+  python unified_docker_manager.py --action build-env --instance_name jalusi-db-1
+  ```
 
 #### **4. Cleanup Permission Issues**
 ```
@@ -468,25 +521,31 @@ export AWS_ACCESS_KEY_ID="your_key"
 export AWS_SECRET_ACCESS_KEY="your_secret"
 
 # 2. Build Docker environment
-python unified_docker_manager.py --action build-env --sequence 1
+python unified_docker_manager.py --action build-env --instance_name jalusi-db-1
 
 # 3. Verify installation
-python unified_docker_manager.py --action info --sequence 1
+python unified_docker_manager.py --action info --instance_name jalusi-db-1
+
+# 4. If you get "compose build requires buildx 0.17 or later" error, install Buildx:
+python unified_docker_manager.py --action install-buildx --instance_name jalusi-db-1
 ```
 
 ### **Manage Docker Compose Services**
 ```bash
 # 1. Start services
-python unified_docker_manager.py --action up --sequence 1
+python unified_docker_manager.py --action up --instance_name jalusi-db-1 --project_name learnly-project
 
 # 2. Check status
-python unified_docker_manager.py --action status --sequence 1
+python unified_docker_manager.py --action status --instance_name jalusi-db-1 --project_name learnly-project
 
 # 3. View logs
-python unified_docker_manager.py --action logs --sequence 1
+python unified_docker_manager.py --action logs --instance_name jalusi-db-1 --project_name learnly-project
 
 # 4. Stop services
-python unified_docker_manager.py --action down --sequence 1
+python unified_docker_manager.py --action down --instance_name jalusi-db-1 --project_name learnly-project
+
+# 5. Use custom docker-compose path
+python unified_docker_manager.py --action up --instance_name jalusi-db-1 --project_name learnly-project --docker_compose_file_path /home/ec2-user/custom/path
 ```
 
 ### **Maintenance Operations**
@@ -504,23 +563,27 @@ python unified_docker_manager.py --action restart --sequence 1
 ### **Complete Workflow Example**
 ```bash
 # Setup environment
-python unified_docker_manager.py --action build-env --sequence 1
+python unified_docker_manager.py --action build-env --instance_name jalusi-db-1
 # Output: Docker environment setup completed successfully!
 
+# If Buildx is missing or outdated, install/upgrade it
+python unified_docker_manager.py --action install-buildx --instance_name jalusi-db-1
+# Output: Docker Buildx installation completed!
+
 # Start services
-python unified_docker_manager.py --action up --sequence 1 --build
+python unified_docker_manager.py --action up --instance_name jalusi-db-1 --project_name learnly-project --build
 # Output: Docker Compose services started successfully!
 
 # Monitor services
-python unified_docker_manager.py --action status --sequence 1
+python unified_docker_manager.py --action status --instance_name jalusi-db-1 --project_name learnly-project
 # Output: Service status and resource usage
 
 # View logs
-python unified_docker_manager.py --action logs --sequence 1 --service api
+python unified_docker_manager.py --action logs --instance_name jalusi-db-1 --project_name learnly-project --service api
 # Output: Service logs
 
 # Cleanup when done
-python unified_docker_manager.py --action cleanup --sequence 1
+python unified_docker_manager.py --action cleanup --instance_name jalusi-db-1
 # Output: Docker cleanup completed!
 ```
 

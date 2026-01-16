@@ -35,6 +35,7 @@ import re
 import argparse
 import subprocess
 import time
+import urllib.parse
 from botocore.exceptions import ClientError, NoCredentialsError
 import sys
 import os
@@ -163,7 +164,13 @@ class ProjectDirectoryCreator:
             token_file = os.path.join(pacs_dir, pac_filename)
         elif pac_name:
             # Construct filename from pac_name
-            token_file = os.path.join(pacs_dir, f"{pac_name}-pac.txt")
+            # If pac_name already ends with -pac or .txt, use it as-is, otherwise add -pac.txt
+            if pac_name.endswith('-pac.txt') or pac_name.endswith('.txt'):
+                token_file = os.path.join(pacs_dir, pac_name)
+            elif pac_name.endswith('-pac'):
+                token_file = os.path.join(pacs_dir, f"{pac_name}.txt")
+            else:
+                token_file = os.path.join(pacs_dir, f"{pac_name}-pac.txt")
         else:
             # Find first file in pacs directory
             try:
@@ -313,8 +320,8 @@ class ProjectDirectoryCreator:
         
         # Configure Git with basic settings
         git_config_commands = [
-            "git config --global user.name \"Learnly Deployer\"",
-            "git config --global user.email \"deployer@learnly.com\"",
+            "git config --global user.name \"Jalusi Deployer\"",
+            "git config --global user.email \"deployer@jalusitech.co.za\"",
             "git config --global credential.helper store"
         ]
         
@@ -367,15 +374,20 @@ class ProjectDirectoryCreator:
         project_path = f"/home/ec2-user/projects/{project_name}"
         repo_url = f"https://github.com/{github_username}/{project_name}.git"
         
-        # If GitHub token is provided, use it in the URL
-        if github_token and 'github.com' in repo_url:
-            # Replace https:// with https://token@
-            auth_url = repo_url.replace('https://', f'https://{github_token}@')
+        # If GitHub token is provided, use it in the URL for authentication
+        if github_token:
+            # Use token in URL: https://token@github.com/username/repo.git
+            # URL encode the token to handle special characters
+            encoded_token = urllib.parse.quote(github_token, safe='')
+            auth_url = repo_url.replace('https://', f'https://{encoded_token}@')
+            print("🔑 Using GitHub token for authentication")
         else:
             auth_url = repo_url
+            print("⚠️  No GitHub token provided - will attempt public repository access")
         
         # Clone into the project directory using dot (.) to clone directly into the directory
-        clone_command = f"cd {project_path} && git clone {auth_url} ."
+        # Use GIT_TERMINAL_PROMPT=0 to prevent interactive prompts
+        clone_command = f"cd {project_path} && GIT_TERMINAL_PROMPT=0 git clone {auth_url} . 2>&1"
         
         success, output = self.run_ssh_command(
             instance_info, key_path,
@@ -388,8 +400,15 @@ class ProjectDirectoryCreator:
             return True
         else:
             print(f"❌ Failed to clone {project_name}: {output}")
-            if "Authentication failed" in output or "Permission denied" in output:
+            if "Authentication failed" in output or "Permission denied" in output or "could not read Username" in output:
                 print("💡 This might be a private repository. Consider providing a GitHub Personal Access Token.")
+                print("💡 You can provide it via:")
+                print("   1. --github-token <token>")
+                print("   2. --pac-name <name> (loads from pacs/<name>-pac.txt)")
+                print("   3. --pac-filename <filename> (loads from pacs/<filename>)")
+            elif "Repository not found" in output or "404" in output:
+                print("💡 Repository might not exist or you don't have access to it.")
+                print(f"💡 Check: https://github.com/{github_username}/{project_name}")
             return False
 
     def setup_project_structure(self, instance_info, key_path, project_name, github_username, github_token=None):
@@ -532,13 +551,13 @@ class ProjectDirectoryCreator:
                                 if filter_pattern and filter_pattern.lower() not in instance_name.lower():
                                     continue
                                 
-                                instances.append({
-                                    'id': instance['InstanceId'],
+                                    instances.append({
+                                        'id': instance['InstanceId'],
                                     'name': instance_name,
-                                    'state': instance['State']['Name'],
-                                    'public_ip': instance.get('PublicIpAddress'),
-                                    'private_ip': instance.get('PrivateIpAddress')
-                                })
+                                        'state': instance['State']['Name'],
+                                        'public_ip': instance.get('PublicIpAddress'),
+                                        'private_ip': instance.get('PrivateIpAddress')
+                                    })
                                 break
             
             if instances:
