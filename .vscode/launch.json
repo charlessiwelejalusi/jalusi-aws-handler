@@ -652,7 +652,7 @@
             "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
             "console": "integratedTerminal",
             "args": [
-                "--instance_name", "jalusi-dev-1",
+                "--instance_name", "jalusi-dev-2",
                 "--config_file", "nginx_https.conf",
                 "--region", "af-south-1"
             ],
@@ -665,8 +665,8 @@
             "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
             "console": "integratedTerminal",
             "args": [
-                "--instance_name", "jalusi-dev-1",
-                "--config_file", "nginx_http.lets_encrypt.conf",
+                "--instance_name", "jalusi-dev-2",
+                "--config_file", "lets_encrypt.nginx_http.conf",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
