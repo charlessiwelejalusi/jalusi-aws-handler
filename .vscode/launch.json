@@ -471,7 +471,11 @@
             "console": "integratedTerminal",
             "args": [
                 "--instance_name", "jalusi-dev-1",
-                "--project_name", "agritech",
+                "--project_name", "jalusi-cms",
+                "--project_name", "Jalusi-Beauty-Booking-System",
+                // "--project_name", "jalusi-cms",
+                // "--project_name", "esdt_v1",
+                // "--project_name", "agritech",
                 "--github_username", "Jalusi-Tech",
                 "--region", "af-south-1"
             ],
@@ -515,7 +519,8 @@
             "console": "integratedTerminal",
             "args": [
                 "--instance-name", "jalusi-dev-1",
-                "--project", "esdt_v1",
+                "--project", "jalusi-cms",
+                // "--project", "esdt_v1",
                 // "--project", "jalusicorp",
                 "--region", "af-south-1"
             ],
