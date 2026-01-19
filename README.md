@@ -285,3 +285,32 @@ If you encounter any issues or have questions:
 
 ## To stop Git from tracking the pems/ folder, you need to remove it from Git's tracking while keeping the local files. Here's the command:
 git rm -r --cached pems/
+
+----------
+
+## Common EC2 Instance Types and RAM
+
+The table below lists some commonly used general-purpose and burstable EC2 instance families with their vCPU and memory specs. Use this as a quick reference when choosing instance sizes for your environments:
+
+| Instance Type | vCPUs | RAM (GiB) |
+|--------------|-------|-----------|
+| t3.micro     | 2     | 1         |
+| t3.small     | 2     | 2         |
+| t3.medium    | 2     | 4         |
+| t3.large     | 2     | 8         |
+| t3.xlarge    | 4     | 16        |
+| t3.2xlarge   | 8     | 32        |
+| t3a.micro    | 2     | 1         |
+| t3a.small    | 2     | 2         |
+| t3a.medium   | 2     | 4         |
+| t3a.large    | 2     | 8         |
+| t3a.xlarge   | 4     | 16        |
+| t3a.2xlarge  | 8     | 32        |
+| m5.large     | 2     | 8         |
+| m5.xlarge    | 4     | 16        |
+| m5.2xlarge   | 8     | 32        |
+| m5.4xlarge   | 16    | 64        |
+| m5.8xlarge   | 32    | 128       |
+
+> **Note**: These values are approximate and based on current AWS documentation as of 2026. Always confirm exact specs and pricing in the AWS Console or official AWS EC2 documentation before selecting an instance type for production.
+

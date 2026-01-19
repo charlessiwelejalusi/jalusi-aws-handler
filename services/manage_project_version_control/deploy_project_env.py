@@ -367,19 +367,32 @@ def main():
             print(f"❌ SSH key file not found: {args.ssh_key}")
             sys.exit(1)
         
-        # Deploy the environment file
-        success = deployer.deploy_env(
-            instance_name=args.instance_name,
-            project_name=args.project,
-            ssh_key_path=args.ssh_key,
-            remote_dir=args.remote_dir
-        )
-        
-        if success:
-            print("\n✅ Environment file deployment completed successfully!")
-        else:
-            print("\n❌ Environment file deployment failed!")
-            sys.exit(1)
+        project_names = args.project.split(',')
+        remote_dirs = args.remote_dir.split(',')
+        for project_name in project_names:
+            project_remote_dir = None
+            for remote_dir in remote_dirs:
+                project_name_in_remote_dir = remote_dir.split('/')[0]
+                if project_name in remote_dir:
+                    project_remote_dir = remote_dir
+                    break
+            if not project_remote_dir:
+                print(f"❌ Remote directory not found for project: {project_name}")
+                sys.exit(1)
+
+            # Deploy the environment file
+            success = deployer.deploy_env(
+                instance_name=args.instance_name,
+                project_name=project_name,
+                ssh_key_path=args.ssh_key,
+                remote_dir=project_remote_dir
+            )
+            
+            if success:
+                print("\n✅ Environment file deployment completed successfully!")
+            else:
+                print("\n❌ Environment file deployment failed!")
+                sys.exit(1)
             
     except Exception as e:
         print(f"❌ Error: {e}")

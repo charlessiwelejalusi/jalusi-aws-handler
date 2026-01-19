@@ -1139,9 +1139,14 @@ class InfrastructureManager(AWSResourceManager):
             raise
 
     def create_ec2_instance(self, instance_name, key_name, security_group_id, instance_profile_name, instance_type='t3.micro'):
-        """Create EC2 instance for the instance name."""
+        """Create EC2 instance for the instance name.
+        
+        Note: This method creates paid EC2 instances. Free Tier restrictions do not apply.
+        If you encounter Free Tier errors, ensure your AWS account allows paid resources.
+        """
         
         print(f"🖥️ Creating EC2 instance: {instance_name}")
+        print(f"💳 Instance Type: {instance_type} (Paid resource - not Free Tier)")
         
         try:
             # Get latest Amazon Linux 2023 AMI
@@ -1162,35 +1167,71 @@ class InfrastructureManager(AWSResourceManager):
             
             print(f"📦 Using AMI: {ami_id}")
             
-            # Create instance
-            response = self.ec2_client.run_instances(
-                ImageId=ami_id,
-                MinCount=1,
-                MaxCount=1,
-                InstanceType=instance_type,
-                KeyName=key_name,
-                SecurityGroupIds=[security_group_id],
-                IamInstanceProfile={'Name': instance_profile_name},
-                TagSpecifications=[
-                    {
-                        'ResourceType': 'instance',
-                        'Tags': [
-                            {'Key': 'Name', 'Value': instance_name}
-                        ]
-                    }
-                ],
-                BlockDeviceMappings=[
-                    {
-                        'DeviceName': '/dev/xvda',
-                        'Ebs': {
-                            'VolumeSize': 30,
-                            'VolumeType': 'gp3',
-                            'DeleteOnTermination': False,
-                            'Encrypted': True
+            # Create instance (paid resource - not subject to Free Tier restrictions)
+            # Note: If you get Free Tier errors, check your AWS account settings
+            # Free Tier restrictions are account-level and may need to be disabled
+            try:
+                response = self.ec2_client.run_instances(
+                    ImageId=ami_id,
+                    MinCount=1,
+                    MaxCount=1,
+                    InstanceType=instance_type,
+                    KeyName=key_name,
+                    SecurityGroupIds=[security_group_id],
+                    IamInstanceProfile={'Name': instance_profile_name},
+                    TagSpecifications=[
+                        {
+                            'ResourceType': 'instance',
+                            'Tags': [
+                                {'Key': 'Name', 'Value': instance_name}
+                            ]
                         }
-                    }
-                ]
-            )
+                    ],
+                    BlockDeviceMappings=[
+                        {
+                            'DeviceName': '/dev/xvda',
+                            'Ebs': {
+                                'VolumeSize': 30,
+                                'VolumeType': 'gp3',
+                                'DeleteOnTermination': False,
+                                'Encrypted': True
+                            }
+                        }
+                    ]
+                )
+            except ClientError as e:
+                error_code = e.response.get('Error', {}).get('Code', '')
+                error_message = e.response.get('Error', {}).get('Message', str(e))
+                
+                # Handle Free Tier restriction errors with helpful message
+                # Check for Free Tier in error message or InvalidParameterCombination with Free Tier context
+                is_free_tier_error = (
+                    'Free Tier' in error_message or 
+                    'free-tier' in error_message.lower() or
+                    (error_code == 'InvalidParameterCombination' and 'free-tier' in error_message.lower())
+                )
+                
+                if is_free_tier_error:
+                    print(f"\n❌ Free Tier Restriction Error:")
+                    print(f"   Your AWS account appears to have Free Tier restrictions enabled.")
+                    print(f"   Instance type '{instance_type}' is not Free Tier eligible.")
+                    print(f"\n💡 Solutions:")
+                    print(f"   1. Disable Free Tier restrictions in your AWS account settings")
+                    print(f"   2. Use a Free Tier eligible instance type: t2.micro or t3.micro")
+                    print(f"   3. Contact AWS Support to enable paid resources for your account")
+                    print(f"   4. Check if your account has Service Control Policies (SCPs) enforcing Free Tier")
+                    print(f"   5. Verify your account billing/payment method is set up correctly")
+                    print(f"\n📋 Free Tier Eligible Instance Types:")
+                    print(f"   - t2.micro (1 vCPU, 1 GiB RAM)")
+                    print(f"   - t3.micro (2 vCPU, 1 GiB RAM)")
+                    print(f"\n💳 Paid Instance Types (require account configuration):")
+                    print(f"   - t3.small, t3.medium, t3.large, t3.xlarge, etc.")
+                    print(f"   - m5.large, m5.xlarge, m5.2xlarge, etc.")
+                    print(f"   - Any instance type beyond Free Tier limits")
+                    raise Exception(f"Free Tier restriction: {error_message}. See solutions above.")
+                else:
+                    # Re-raise other errors as-is
+                    raise
             
             instance_id = response['Instances'][0]['InstanceId']
             
@@ -1358,6 +1399,123 @@ class InfrastructureManager(AWSResourceManager):
             print(f"❌ Error attaching EBS volume: {e}")
             raise
 
+    def allocate_elastic_ip(self, instance_name):
+        """Allocate an Elastic IP address and tag it with instance name."""
+        print(f"🌐 Allocating Elastic IP for instance: {instance_name}")
+        
+        try:
+            # Allocate Elastic IP
+            response = self.ec2_client.allocate_address(
+                Domain='vpc'  # Use VPC domain for EC2-VPC instances
+            )
+            
+            allocation_id = response['AllocationId']
+            public_ip = response['PublicIp']
+            
+            # Tag the Elastic IP with instance name
+            self.ec2_client.create_tags(
+                Resources=[allocation_id],
+                Tags=[
+                    {'Key': 'Name', 'Value': instance_name}
+                ]
+            )
+            
+            print(f"✅ Elastic IP allocated successfully!")
+            print(f"🆔 Allocation ID: {allocation_id}")
+            print(f"🌐 Public IP: {public_ip}")
+            
+            return allocation_id, public_ip
+            
+        except Exception as e:
+            print(f"❌ Error allocating Elastic IP: {e}")
+            raise
+
+    def associate_elastic_ip(self, allocation_id, instance_id):
+        """Associate an Elastic IP with an EC2 instance."""
+        print(f"🔗 Associating Elastic IP {allocation_id} with instance {instance_id}")
+        
+        try:
+            # Associate Elastic IP with instance
+            response = self.ec2_client.associate_address(
+                AllocationId=allocation_id,
+                InstanceId=instance_id
+            )
+            
+            association_id = response['AssociationId']
+            print(f"✅ Elastic IP associated successfully!")
+            print(f"🔗 Association ID: {association_id}")
+            
+            # Get the public IP address
+            response = self.ec2_client.describe_addresses(AllocationIds=[allocation_id])
+            if response['Addresses']:
+                public_ip = response['Addresses'][0]['PublicIp']
+                print(f"🌐 Static Public IP: {public_ip}")
+                return public_ip
+            
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error associating Elastic IP: {e}")
+            raise
+
+    def find_elastic_ip_by_instance_name(self, instance_name):
+        """Find Elastic IP allocation by instance name tag."""
+        print(f"🔍 Looking for Elastic IP with tag Name={instance_name}")
+        
+        try:
+            # Get all Elastic IPs
+            response = self.ec2_client.describe_addresses()
+            
+            # Filter by tag
+            for address in response['Addresses']:
+                if 'Tags' in address:
+                    for tag in address['Tags']:
+                        if tag['Key'] == 'Name' and tag['Value'] == instance_name:
+                            allocation_id = address['AllocationId']
+                            public_ip = address['PublicIp']
+                            instance_id = address.get('InstanceId')
+                            association_id = address.get('AssociationId')
+                            
+                            print(f"✅ Found Elastic IP: {allocation_id} ({public_ip})")
+                            if instance_id:
+                                print(f"   Associated with instance: {instance_id}")
+                            
+                            return {
+                                'allocation_id': allocation_id,
+                                'public_ip': public_ip,
+                                'instance_id': instance_id,
+                                'association_id': association_id
+                            }
+            
+            print(f"ℹ️  No Elastic IP found with tag Name={instance_name}")
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error finding Elastic IP: {e}")
+            return None
+
+    def release_elastic_ip(self, allocation_id):
+        """Release an Elastic IP address."""
+        print(f"🗑️  Releasing Elastic IP: {allocation_id}")
+        
+        try:
+            # First, disassociate if it's associated
+            response = self.ec2_client.describe_addresses(AllocationIds=[allocation_id])
+            if response['Addresses']:
+                address = response['Addresses'][0]
+                if address.get('AssociationId'):
+                    print(f"🔗 Disassociating Elastic IP from instance...")
+                    self.ec2_client.disassociate_address(AssociationId=address['AssociationId'])
+                    print(f"✅ Elastic IP disassociated")
+            
+            # Release the Elastic IP
+            self.ec2_client.release_address(AllocationId=allocation_id)
+            print(f"✅ Elastic IP {allocation_id} released successfully!")
+            
+        except Exception as e:
+            print(f"❌ Error releasing Elastic IP: {e}")
+            raise
+
     def destroy_infrastructure(self, instance_name):
         """Destroy complete infrastructure for the instance name."""
         print(f"💥 Starting Infrastructure Destruction for: {instance_name}")
@@ -1411,7 +1569,18 @@ class InfrastructureManager(AWSResourceManager):
             except Exception as e:
                 print(f"⚠️  Error checking for additional instances: {e}")
             
-            # 2. Delete EBS volume
+            # 2. Release Elastic IP if it exists
+            elastic_ip_info = self.find_elastic_ip_by_instance_name(instance_name)
+            if elastic_ip_info:
+                allocation_id = elastic_ip_info['allocation_id']
+                print(f"\n🌐 Releasing Elastic IP: {allocation_id}")
+                try:
+                    self.release_elastic_ip(allocation_id)
+                    print(f"✅ Elastic IP {allocation_id} released successfully!")
+                except Exception as e:
+                    print(f"❌ Error releasing Elastic IP: {e}")
+            
+            # 3. Delete EBS volume
             if resources['volume']:
                 volume_id = resources['volume']['id']
                 print(f"\n💾 Deleting EBS volume: {volume_id}")
@@ -1424,7 +1593,7 @@ class InfrastructureManager(AWSResourceManager):
                 except Exception as e:
                     print(f"❌ Error deleting EBS volume: {e}")
             
-            # 3. Delete S3 bucket
+            # 4. Delete S3 bucket
             if resources['s3_bucket']:
                 bucket_name = resources['s3_bucket']['name']
                 print(f"\n🪣 Deleting S3 bucket: {bucket_name}")
@@ -1443,7 +1612,7 @@ class InfrastructureManager(AWSResourceManager):
                 except Exception as e:
                     print(f"❌ Error deleting S3 bucket: {e}")
             
-            # 4. Delete key pair
+            # 5. Delete key pair
             if resources['key_pair']:
                 key_name = resources['key_pair']['name']
                 
@@ -1472,7 +1641,7 @@ class InfrastructureManager(AWSResourceManager):
                 except Exception as e:
                     print(f"❌ Error deleting key pair: {e}")
             
-            # 5. Delete security group
+            # 6. Delete security group
             if resources['security_group']:
                 sg_id = resources['security_group']['id']
                 sg_name = resources['security_group']['name']
@@ -1483,7 +1652,7 @@ class InfrastructureManager(AWSResourceManager):
                 except Exception as e:
                     print(f"❌ Error deleting security group: {e}")
             
-            # 6. Delete IAM resources (in proper order)
+            # 7. Delete IAM resources (in proper order)
             if resources['iam_instance_profile']:
                 instance_profile_name = resources['iam_instance_profile']['name']
                 print(f"\n👤 Deleting IAM instance profile: {instance_profile_name}")
@@ -1554,7 +1723,8 @@ class InfrastructureManager(AWSResourceManager):
             's3_bucket': None,
             'iam_role': None,
             'iam_policy': None,
-            'iam_instance_profile': None
+            'iam_instance_profile': None,
+            'elastic_ip': None
         }
         
         try:
@@ -1663,6 +1833,18 @@ class InfrastructureManager(AWSResourceManager):
             except ClientError:
                 print(f"👤 IAM Instance Profile: Not found")
             
+            # Check Elastic IP
+            elastic_ip_info = self.find_elastic_ip_by_instance_name(instance_name)
+            if elastic_ip_info:
+                resources['elastic_ip'] = {
+                    'allocation_id': elastic_ip_info['allocation_id'],
+                    'public_ip': elastic_ip_info['public_ip'],
+                    'instance_id': elastic_ip_info.get('instance_id')
+                }
+                print(f"🌐 Elastic IP: {elastic_ip_info['allocation_id']} ({elastic_ip_info['public_ip']})")
+            else:
+                print(f"🌐 Elastic IP: Not found")
+            
             print("=" * 60)
             return resources
             
@@ -1670,8 +1852,19 @@ class InfrastructureManager(AWSResourceManager):
             print(f"❌ Error listing resources: {e}")
             raise
 
-    def create_infrastructure(self, instance_name=None, instance_type='t3.micro'):
-        """Create complete infrastructure for the instance name."""
+    def create_infrastructure(self, instance_name=None, instance_type='t3.micro', attach_static_ip=False):
+        """Create complete infrastructure for the instance name.
+        
+        Note: This method creates paid AWS resources. Free Tier restrictions do not apply.
+        Supports any instance type including paid resources (t3.medium, t3.large, m5.large, etc.).
+        If you encounter Free Tier errors, ensure your AWS account allows paid resources.
+        
+        Args:
+            instance_name: Name for the instance
+            instance_type: EC2 instance type (default: t3.micro)
+                          Supports any instance type including paid resources
+            attach_static_ip: Whether to allocate and attach an Elastic IP (default: False)
+        """
         if instance_name is None:
             # If no instance name provided, we need a base name to find next available
             # For now, we'll require instance_name to be provided
@@ -1711,6 +1904,18 @@ class InfrastructureManager(AWSResourceManager):
             # Attach EBS volume
             self.attach_ebs_volume(volume_id, instance_id)
             
+            # Allocate and associate Elastic IP if requested
+            elastic_ip_allocation_id = None
+            elastic_ip = None
+            if attach_static_ip:
+                elastic_ip_allocation_id, elastic_ip = self.allocate_elastic_ip(instance_name)
+                # Wait a moment for instance to be fully ready
+                time.sleep(2)
+                static_public_ip = self.associate_elastic_ip(elastic_ip_allocation_id, instance_id)
+                if static_public_ip:
+                    elastic_ip = static_public_ip
+                    public_ip = static_public_ip  # Update public_ip for summary
+            
             # Summary
             print("\n" + "=" * 70)
             print("🎉 INFRASTRUCTURE CREATION COMPLETE!")
@@ -1724,7 +1929,11 @@ class InfrastructureManager(AWSResourceManager):
             print(f"👤 IAM Instance Profile: {instance_profile_name}")
             print(f"🖥️ EC2 Instance: {instance_id}")
             print(f"💾 EBS Volume: {volume_id} (30 GiB gp3)")
-            print(f"🌐 Public IP: {public_ip}")
+            if attach_static_ip and elastic_ip:
+                print(f"🌐 Static Public IP (Elastic IP): {elastic_ip}")
+                print(f"🆔 Elastic IP Allocation ID: {elastic_ip_allocation_id}")
+            else:
+                print(f"🌐 Public IP: {public_ip}")
             if public_ip:
                 # Use just the filename for SSH command (not full path)
                 key_filename = os.path.basename(key_file)
@@ -1741,7 +1950,9 @@ class InfrastructureManager(AWSResourceManager):
                 'instance_profile_name': instance_profile_name,
                 'instance_id': instance_id,
                 'volume_id': volume_id,
-                'public_ip': public_ip
+                'public_ip': public_ip,
+                'elastic_ip_allocation_id': elastic_ip_allocation_id,
+                'elastic_ip': elastic_ip
             }
             
         except Exception as e:
@@ -1768,6 +1979,8 @@ def main():
                        help='Filter resources by name pattern')
     parser.add_argument('--instance-type', '-t', type=str, default='t3.micro',
                        help='EC2 instance type (default: t3.micro)')
+    parser.add_argument('--attach_static_ip', action='store_true',
+                       help='Allocate and attach an Elastic IP address to the instance (for create-infrastructure action)')
     
     args = parser.parse_args()
     
@@ -1899,7 +2112,7 @@ def main():
             
             # If no instance name provided, auto-find the next available one
             instance_name = args.instance_name
-            manager.create_infrastructure(instance_name, args.instance_type)
+            manager.create_infrastructure(instance_name, args.instance_type, attach_static_ip=args.attach_static_ip)
         
         elif args.action == 'destroy-infrastructure':
             # Infrastructure Management

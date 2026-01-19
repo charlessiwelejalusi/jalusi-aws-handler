@@ -656,19 +656,21 @@ def main():
             creator.list_all_instances(filter_pattern=args.filter)
         elif args.instance_name and args.project_name and args.github_username:
             # Create project directory structure
-            print(f"📁 Creating project directory structure")
-            success = creator.create_project_repository_structure(
-                args.instance_name, 
-                args.project_name, 
-                args.github_username,
-                args.github_token,
-                pac_name=args.pac_name,
-                pac_filename=args.pac_filename
-            )
-            if success:
-                print(f"\n✅ Project directory structure created successfully!")
-            else:
-                print(f"\n❌ Failed to create project directory structure")
+            docker_compose_project_names = args.project_name.split(',')
+            for docker_compose_project_name in docker_compose_project_names:
+                print(f"📁 Creating project directory structure for {docker_compose_project_name}")
+                success = creator.create_project_repository_structure(
+                    args.instance_name, 
+                    docker_compose_project_name, 
+                    args.github_username,
+                    args.github_token,
+                    pac_name=args.pac_name,
+                    pac_filename=args.pac_filename
+                )
+                if not success:
+                    print(f"❌ Failed to create project directory structure for {docker_compose_project_name}")
+                    break
+                print(f"✅ Project directory structure created successfully for {docker_compose_project_name}")
         else:
             # Show usage
             print("❌ Please specify either --list or provide --instance_name, --project_name, and --github_username")

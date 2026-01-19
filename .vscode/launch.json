@@ -31,7 +31,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "start-instance",
-                "--instance_name", "jalusi-db-1",
+                "--instance_name", "jalusi-dev-2",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -44,7 +44,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "stop-instance",
-                "--instance_name", "jalusi-dev-1",
+                "--instance_name", "jalusi-dev-2",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -102,6 +102,51 @@
             "justMyCode": false
         },
         {
+            "name": "Unified Resource Manager: Create Infrastructure (with Static IP)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/resource_manager/unified_resource_manager.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--action", "create-infrastructure",
+                "--instance_name", "jalusi-dev-1",
+                "--instance-type", "t3.small",
+                "--attach_static_ip",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Unified Resource Manager: Create Infrastructure (Static IP, t3.medium)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/resource_manager/unified_resource_manager.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--action", "create-infrastructure",
+                "--instance_name", "jalusi-dev-2",
+                "--instance-type", "t3.medium",
+                "--attach_static_ip",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Unified Resource Manager: Create Infrastructure (Static IP, t3.large)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/services/resource_manager/unified_resource_manager.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--action", "create-infrastructure",
+                "--instance_name", "jalusi-db-1",
+                "--instance-type", "t3.large",
+                "--attach_static_ip",
+                "--region", "af-south-1"
+            ],
+            "justMyCode": false
+        },
+        {
             "name": "Unified Resource Manager: Destroy Infrastructure",
             "type": "debugpy",
             "request": "launch",
@@ -135,7 +180,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "build-env",
-                "--instance_name", "jalusi-dev-1",
+                "--instance_name", "jalusi-dev-2",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -161,8 +206,8 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "up",
-                "--instance_name", "jalusi-db-1",
-                "--project_name", "test-project",
+                "--instance_name", "jalusi-dev-1",
+                "--project_name", "Jalusi-Beauty-Booking-System",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -175,11 +220,9 @@
             "console": "integratedTerminal",
             "args": [
                 "--action", "up",
-                "--instance_name", "jalusi-dev-1",
+                "--instance_name", "jalusi-dev-2",
                 "--project_name", "esdt_v1",
-                "--docker_compose_file_path", "/home/ec2-user/projects/esdt_v1/",
-                // "--project_name", "agritech",
-                // "--docker_compose_file_path", "/home/ec2-user/projects/agritech/services",
+                "--docker_compose_file_path", "/home/ec2-user/projects/jalusi-cms,/home/ec2-user/projects/Jalusi-Beauty-Booking-System/jalusi-beauty-booking-service/docker,/home/ec2-user/projects/esdt_v1,/home/ec2-user/projects/agritech/services,/home/ec2-user/projects/agritech/services/,/home/ec2-user/projects/mzansi-serve,/home/ec2-user/projects/jalusi-tech",
                 "--build",
                 "--region", "af-south-1"
             ],
@@ -470,12 +513,9 @@
             "program": "${workspaceFolder}/services/manage_project_version_control/create_project_repository.py",
             "console": "integratedTerminal",
             "args": [
-                "--instance_name", "jalusi-dev-1",
-                "--project_name", "jalusi-cms",
-                "--project_name", "Jalusi-Beauty-Booking-System",
-                // "--project_name", "jalusi-cms",
-                // "--project_name", "esdt_v1",
-                // "--project_name", "agritech",
+                "--instance_name", "jalusi-dev-2",
+                // "--project_name", "jalusi-cms,Jalusi-Beauty-Booking-System,esdt_v1,agritech,mzansi-serve,jalusi-tech",
+                "--project_name", "jalusi-tech",
                 "--github_username", "Jalusi-Tech",
                 "--region", "af-south-1"
             ],
@@ -518,7 +558,7 @@
             "program": "${workspaceFolder}/services/manage_project_version_control/deploy_project_env.py",
             "console": "integratedTerminal",
             "args": [
-                "--instance-name", "jalusi-dev-1",
+                "--instance-name", "jalusi-dev-2",
                 "--project", "jalusi-cms",
                 // "--project", "esdt_v1",
                 // "--project", "jalusicorp",
@@ -533,9 +573,9 @@
             "program": "${workspaceFolder}/services/manage_project_version_control/deploy_project_env.py",
             "console": "integratedTerminal",
             "args": [
-                "--instance-name", "jalusi-dev-1",
-                "--project", "jalusicorp",
-                "--remote-dir", "/home/ec2-user/projects/agritech/services",
+                "--instance-name", "jalusi-dev-2",
+                "--project","jalusi-cms,Jalusi-Beauty-Booking-System,esdt_v1,agritech,mzansi-serve,jalusi-tech",
+                "--remote-dir", "/home/ec2-user/projects/jalusi-cms,/home/ec2-user/projects/Jalusi-Beauty-Booking-System/jalusi-beauty-booking-service/docker,/home/ec2-user/projects/esdt_v1,/home/ec2-user/projects/agritech/services,/home/ec2-user/projects/agritech/services/,/home/ec2-user/projects/mzansi-serve,/home/ec2-user/projects/jalusi-tech",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -587,7 +627,7 @@
             "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
             "console": "integratedTerminal",
             "args": [
-                "--instance_name", "jalusi-dev-1",
+                "--instance_name", "jalusi-dev-2",
                 "--region", "af-south-1"
             ],
             "justMyCode": false
@@ -651,20 +691,7 @@
             "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
             "console": "integratedTerminal",
             "args": [
-                "--instance_name", "jalusi-dev-1",
-                "--action", "restart",
-                "--region", "af-south-1"
-            ],
-            "justMyCode": false
-        },
-        {
-            "name": "Restart Nginx: Different Instance",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/services/manage_project_version_control/replace_nginx_conf_file.py",
-            "console": "integratedTerminal",
-            "args": [
-                "--instance_name", "jalusi-db-1",
+                "--instance_name", "jalusi-dev-2",
                 "--action", "restart",
                 "--region", "af-south-1"
             ],

@@ -1095,7 +1095,11 @@ def main():
             print(f"❌ --project_name is required for action: {args.action}")
             print("   Example: --project_name learnly-project")
             return
-        
+        if args.docker_compose_file_path:
+            docker_compose_file_paths = args.docker_compose_file_path.split(',')
+        else:
+            docker_compose_file_paths = []
+
         # Execute requested action
         if args.action == 'build-env':
             manager.build_docker_environment(args.instance_name)
@@ -1107,19 +1111,39 @@ def main():
             manager.restart_docker(args.instance_name)
         
         elif args.action == 'up':
-            manager.docker_compose_up(args.instance_name, args.project_name, build=args.build, service=args.service, docker_compose_file_path=args.docker_compose_file_path)
+            if len(docker_compose_file_paths) > 1:
+                for docker_compose_file_path in docker_compose_file_paths:
+                    manager.docker_compose_up(args.instance_name, args.project_name, build=args.build, service=args.service, docker_compose_file_path=docker_compose_file_path)
+            else:
+                manager.docker_compose_up(args.instance_name, args.project_name, build=args.build, service=args.service, docker_compose_file_path=docker_compose_file_paths[0])
         
         elif args.action == 'down':
-            manager.docker_compose_down(args.instance_name, args.project_name, service=args.service, docker_compose_file_path=args.docker_compose_file_path)
+            if len(docker_compose_file_paths) > 1:
+                for docker_compose_file_path in docker_compose_file_paths:
+                    manager.docker_compose_down(args.instance_name, args.project_name, service=args.service, docker_compose_file_path=docker_compose_file_path)
+            else:
+                manager.docker_compose_down(args.instance_name, args.project_name, service=args.service, docker_compose_file_path=docker_compose_file_paths[0])
         
         elif args.action == 'restart':
-            manager.docker_compose_restart(args.instance_name, args.project_name, service=args.service, docker_compose_file_path=args.docker_compose_file_path)
+            if len(docker_compose_file_paths) > 1:
+                for docker_compose_file_path in docker_compose_file_paths:
+                    manager.docker_compose_restart(args.instance_name, args.project_name, service=args.service, docker_compose_file_path=docker_compose_file_path)
+            else:
+                manager.docker_compose_restart(args.instance_name, args.project_name, service=args.service, docker_compose_file_path=docker_compose_file_paths[0])
         
         elif args.action == 'logs':
-            manager.docker_compose_logs(args.instance_name, args.project_name, service=args.service, follow=args.follow, tail=args.tail, docker_compose_file_path=args.docker_compose_file_path)
+            if len(docker_compose_file_paths) > 1:
+                for docker_compose_file_path in docker_compose_file_paths:
+                    manager.docker_compose_logs(args.instance_name, args.project_name, service=args.service, follow=args.follow, tail=args.tail, docker_compose_file_path=docker_compose_file_path)
+            else:
+                manager.docker_compose_logs(args.instance_name, args.project_name, service=args.service, follow=args.follow, tail=args.tail, docker_compose_file_path=docker_compose_file_paths[0])
         
         elif args.action == 'status':
-            manager.docker_compose_status(args.instance_name, args.project_name, docker_compose_file_path=args.docker_compose_file_path)
+            if len(docker_compose_file_paths) > 1:
+                for docker_compose_file_path in docker_compose_file_paths:
+                    manager.docker_compose_status(args.instance_name, args.project_name, docker_compose_file_path=docker_compose_file_path)
+            else:
+                manager.docker_compose_status(args.instance_name, args.project_name, docker_compose_file_path=docker_compose_file_paths[0])
         
         elif args.action == 'cleanup':
             manager.docker_cleanup(args.instance_name, aggressive=args.aggressive)
